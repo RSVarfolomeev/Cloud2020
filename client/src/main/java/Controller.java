@@ -12,7 +12,11 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ResourceBundle;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 public class Controller implements Initializable {
 
@@ -27,6 +31,13 @@ public class Controller implements Initializable {
         out.writeUTF(text);
         out.flush();
         txt.clear();
+
+        if (text.startsWith("Upload:")){
+            Path file = Paths.get(text.replace("Upload:", ""));
+            if (Files.exists(file)){
+                Files.copy(file, Paths.get("D:\\java\\Cloud\\server\\FileServer\\" + file.getFileName()), REPLACE_EXISTING);
+            }
+        }
     }
 
     private void initStreams() throws IOException {
