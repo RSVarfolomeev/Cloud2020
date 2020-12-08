@@ -7,9 +7,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.net.URL;
 import java.nio.file.Files;
@@ -25,19 +23,13 @@ public class Controller implements Initializable {
     private Socket socket;
     private DataInputStream in;
     private DataOutputStream out;
+    private FileInputStream inFile;
 
     public void sendMessage(ActionEvent event) throws IOException {
         String text = txt.getText();
         out.writeUTF(text);
         out.flush();
         txt.clear();
-
-        if (text.startsWith("Upload: ")){
-            Path file = Paths.get(text.replace("Upload: ", ""));
-            if (Files.exists(file)){
-                Files.copy(file, Paths.get("D:\\java\\Cloud\\server\\FileServer\\" + file.getFileName()), REPLACE_EXISTING);
-            }
-        }
     }
 
     private void initStreams() throws IOException {
@@ -55,6 +47,17 @@ public class Controller implements Initializable {
                     while (true) {
                         String message = in.readUTF();
                         listView.getItems().add(message);
+                        if (message.startsWith("Server ready for upload -")){
+                            Path file = Paths.get(message.replace("Server ready for upload - ", ""));
+                            if (Files.exists(file)){
+                                inFile = new FileInputStream(String.valueOf(file));
+                                byte[] buffer = new byte[inFile.available()];
+                                // считываем файл в буфер
+                                inFile.read(buffer, 0, buffer.length);
+                                // записываем из буфера в поток
+                                out.write(buffer, 0, buffer.length);
+                            }
+                        }
                     }
                 } catch (Exception e) {
                     System.err.println("Exception while read!");

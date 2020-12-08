@@ -1,8 +1,7 @@
-import java.io.Closeable;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class Handler implements Runnable {
 
@@ -12,6 +11,7 @@ public class Handler implements Runnable {
     private Socket socket;
     private DataInputStream in;
     private DataOutputStream out;
+    private FileOutputStream outFile;
     private boolean running;
 
     public Handler(Server server, Socket socket) throws IOException {
@@ -48,6 +48,17 @@ public class Handler implements Runnable {
                 String message = readMessage();
                 System.out.println("Received: " + message);
                 server.sendMessageForAll(wrapMessageWithName(message));
+
+                if (message.startsWith("Upload: ")) {
+                    server.sendMessageForAll("Server ready for upload - " + message.replace("Upload: ", ""));
+                    Files.createFile(Paths.get("D:\\java\\Cloud\\server\\FileServer\\test.txt"));
+                    outFile = new FileOutputStream("D:\\java\\Cloud\\server\\FileServer\\test.txt");
+                    byte[] buffer = new byte[in.available()];
+                    // считываем входящий поток
+                    in.read(buffer, 0, buffer.length);
+                    // записываем из буфера в файл
+                    outFile.write(buffer, 0, buffer.length);
+                }
             }
         } catch (Exception e) {
             System.err.println("Exception while read or write!");
