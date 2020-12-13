@@ -48,15 +48,27 @@ public class Controller implements Initializable {
                         String message = in.readUTF();
                         listView.getItems().add(message);
                         if (message.startsWith("Server ready for upload -")){
-                            Path file = Paths.get(message.replace("Server ready for upload - ", ""));
-                            if (Files.exists(file)){
-                                inFile = new FileInputStream(String.valueOf(file));
-                                byte[] buffer = new byte[inFile.available()];
-                                // считываем файл в буфер
-                                inFile.read(buffer, 0, buffer.length);
-                                // записываем из буфера в поток
-                                out.write(buffer, 0, buffer.length);
+                            out.writeUTF("Go Upload!");
+                            out.flush();
+
+//                            Upload: E:\test.txt
+//                            Upload: E:\troll.jpg
+
+                            Path filePath = Paths.get(message.replace("Server ready for upload - ", ""));
+                            String fileName = filePath.getFileName().toString();
+                            System.out.println(fileName);
+                            out.writeUTF(fileName);
+                            File file = new File(filePath.toString());
+                            System.out.println(filePath.toString());
+                            long size = file.length();
+                            out.writeLong(size);
+                            byte[] buffer = new byte[255];
+                            FileInputStream fis = new FileInputStream(file);
+                            for (int i = 0; i < (size + 255) / 256; i++) {
+                                int read = fis.read(buffer);
+                                out.write(buffer, 0, read);
                             }
+                            out.flush();
                         }
                     }
                 } catch (Exception e) {
